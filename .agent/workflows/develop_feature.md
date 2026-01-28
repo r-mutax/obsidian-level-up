@@ -1,15 +1,15 @@
 ---
-description: How to develop a new feature for Obsidian Level Up
+description: Obsidian Level Up の新機能を開発する手順
 ---
 
-1. Create a new branch for the feature `git checkout -b feature/[feature-name]`
-2. Implement your changes
+1. 機能ごとのブランチを作成する `git checkout -b feature/[feature-name]`
+2. 変更を実装する
 // turbo
-3. Build the plugin `npm run build`
+3. プラグインをビルドする `npm run build`
 // turbo
-4. Run tests `npm test`
+4. テストを実行する `npm test`
 // turbo
-5. Deploy to test vault `.\sync-plugin.bat`
-6. Verify manually if needed
-7. Commit and Push changes
-8. Create PR and Merge
+5. テスト用Vaultにデプロイする `.\sync-plugin.bat`
+6. 必要に応じて手動検証を行う
+7. 変更をコミットしてプッシュする
+8. PRを作成し、マージする
