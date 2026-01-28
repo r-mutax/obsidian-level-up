@@ -5,13 +5,19 @@ import { addXp, updateStreak } from './gamification';
 export default class LevelUpPlugin extends Plugin {
     data: LevelData;
     settings: GamificationSettings;
+    statusBarItem: HTMLElement;
 
     async onload() {
         console.log('Obsidian Level Up Plugin loaded');
 
         await this.loadPluginData();
 
+        // ステータスバーの作成
+        this.statusBarItem = this.addStatusBarItem();
+        this.updateStatusBar();
+
         // 3. ストリーク（ログインボーナス）チェック
+        this.checkStreak();
         this.checkStreak();
 
         // 1. ノート作成イベント
@@ -49,6 +55,13 @@ export default class LevelUpPlugin extends Plugin {
             data: this.data,
             settings: this.settings
         });
+        this.updateStatusBar();
+    }
+
+    updateStatusBar() {
+        if (this.statusBarItem) {
+            this.statusBarItem.setText(`Lv.${this.data.level} | XP: ${this.data.currentXp}/${this.data.nextLevelXp}`);
+        }
     }
 
     gainXp(amount: number, reason: string) {
