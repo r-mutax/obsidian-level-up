@@ -7,10 +7,25 @@ export interface LevelData {
     lastDateJoined: string; // ISO Date
 }
 
+export const DEFAULT_DATA: LevelData = {
+    level: 1,
+    currentXp: 0,
+    nextLevelXp: 100,
+    totalXp: 0,
+    streak: 0,
+    lastDateJoined: new Date().toISOString().split('T')[0],
+}
+
 export interface GamificationSettings {
     xpPerChar: number;
     xpPerNote: number;
     streakBonus: number;
+    // Phase 0 Extensions
+    xpPerLink: number;
+    linkFactor: number;
+    xpPerMinuteReading: number;
+    // Phase 1 Extensions
+    excludedFolders: string; // 改行区切りの文字列として保存
     debug: boolean;
 }
 
@@ -18,14 +33,9 @@ export const DEFAULT_SETTINGS: GamificationSettings = {
     xpPerChar: 1,
     xpPerNote: 50,
     streakBonus: 100,
+    xpPerLink: 10,
+    linkFactor: 0.5,
+    xpPerMinuteReading: 10,
+    excludedFolders: '',
     debug: true,
-}
-
-export const DEFAULT_DATA: LevelData = {
-    level: 1,
-    currentXp: 0,
-    nextLevelXp: 100,
-    totalXp: 0,
-    streak: 0,
-    lastDateJoined: '',
 }
