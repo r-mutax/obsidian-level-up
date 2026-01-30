@@ -17,6 +17,7 @@ export default class LevelUpPlugin extends Plugin {
 
         await this.loadPluginData();
 
+<<<<<<< HEAD
         // 0. Register View
         this.registerView(
             VIEW_TYPE_DASHBOARD,
@@ -37,6 +38,8 @@ export default class LevelUpPlugin extends Plugin {
             }
         });
 
+=======
+>>>>>>> main
         // 1. UI初期化
         this.statusBarItem = this.addStatusBarItem();
         this.updateStatusBar();

@@ -7,3 +7,4 @@ manifest.json
 .git/
 test-vault/
 coverage/
+.agent/
