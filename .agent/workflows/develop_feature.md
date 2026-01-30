@@ -2,6 +2,8 @@
 description: Obsidian Level Up の新機能を開発する手順
 ---
 
+// turbo-all
+
 1. **詳細仕様の策定（Discussion）**
    - 対象のIssueについて、詳細な実装仕様や設計方針をユーザーと議論する。
    - 決定事項をまとめる。
