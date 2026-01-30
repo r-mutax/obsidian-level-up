@@ -13,6 +13,10 @@ export function addXp(data: LevelData, amount: number): { data: LevelData, level
     data.currentXp += amount;
     data.totalXp += amount;
 
+    // Phase 1: XP History Recording
+    if (!data.xpHistory) data.xpHistory = {}; // Initialize if missing
+    const today = new Date().toISOString().split('T')[0];
+    data.xpHistory[today] = (data.xpHistory[today] || 0) + amount;
     while (data.currentXp >= data.nextLevelXp) {
         data.currentXp -= data.nextLevelXp;
         data.level++;

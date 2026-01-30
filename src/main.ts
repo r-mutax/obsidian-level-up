@@ -1,6 +1,7 @@
-import { Plugin, TFile, Editor, MarkdownView, Notice, PluginSettingTab, App, Setting } from 'obsidian';
+import { Plugin, TFile, Editor, MarkdownView, Notice, PluginSettingTab, App, Setting, WorkspaceLeaf } from 'obsidian';
 import { LevelData, DEFAULT_DATA, GamificationSettings, DEFAULT_SETTINGS } from './types';
 import { addXp, updateStreak } from './gamification';
+import { DashboardView, VIEW_TYPE_DASHBOARD } from './DashboardView';
 
 export default class LevelUpPlugin extends Plugin {
     data: LevelData;
@@ -15,6 +16,26 @@ export default class LevelUpPlugin extends Plugin {
         console.log('Obsidian Level Up Plugin loaded');
 
         await this.loadPluginData();
+
+        // 0. Register View
+        this.registerView(
+            VIEW_TYPE_DASHBOARD,
+            (leaf) => new DashboardView(leaf, this.data)
+        );
+
+        // Add Ribbon Icon
+        this.addRibbonIcon('bar-chart-2', 'Open Level Up Dashboard', () => {
+            this.activateView();
+        });
+
+        // Add Command
+        this.addCommand({
+            id: 'open-dashboard',
+            name: 'Open Dashboard',
+            callback: () => {
+                this.activateView();
+            }
+        });
 
         // 1. UI初期化
         this.statusBarItem = this.addStatusBarItem();
@@ -65,6 +86,30 @@ export default class LevelUpPlugin extends Plugin {
     async onunload() {
         console.log('Obsidian Level Up Plugin unloaded');
         window.clearInterval(this.readingTimer);
+        this.app.workspace.detachLeavesOfType(VIEW_TYPE_DASHBOARD);
+    }
+
+    async activateView() {
+        const { workspace } = this.app;
+
+        let leaf: WorkspaceLeaf | null = null;
+        const leaves = workspace.getLeavesOfType(VIEW_TYPE_DASHBOARD);
+
+        if (leaves.length > 0) {
+            // A leaf with our view already exists, use that
+            leaf = leaves[0];
+        } else {
+            // Our view could not be found in the workspace, create a new leaf
+            // in the right sidebar for example
+            leaf = workspace.getRightLeaf(false);
+            if (leaf) {
+                await leaf.setViewState({ type: VIEW_TYPE_DASHBOARD, active: true });
+            }
+        }
+
+        if (leaf) {
+            workspace.revealLeaf(leaf);
+        }
     }
 
     async loadPluginData() {
@@ -138,6 +183,13 @@ export default class LevelUpPlugin extends Plugin {
         }
 
         this.savePluginData();
+
+        // Refresh Dashboard Views if open
+        this.app.workspace.getLeavesOfType(VIEW_TYPE_DASHBOARD).forEach(leaf => {
+            if (leaf.view instanceof DashboardView) {
+                leaf.view.refresh(this.data);
+            }
+        });
     }
 
     checkStreak() {

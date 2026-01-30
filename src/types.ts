@@ -5,6 +5,8 @@ export interface LevelData {
     totalXp: number;
     streak: number;
     lastDateJoined: string; // ISO Date
+    // Phase 1 Extensions
+    xpHistory: Record<string, number>; // YYYY-MM-DD: xp
 }
 
 export const DEFAULT_DATA: LevelData = {
@@ -14,6 +16,7 @@ export const DEFAULT_DATA: LevelData = {
     totalXp: 0,
     streak: 0,
     lastDateJoined: new Date().toISOString().split('T')[0],
+    xpHistory: {},
 }
 
 export interface GamificationSettings {

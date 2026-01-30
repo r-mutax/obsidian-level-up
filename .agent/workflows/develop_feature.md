@@ -14,18 +14,18 @@ description: Obsidian Level Up の新機能を開発する手順
 3. 機能ごとのブランチを作成する `git checkout -b feature/[feature-name]`
 4. 変更を実装する
 // turbo
-3. プラグインをビルドする `npm run build`
+5. プラグインをビルドする `npm run build`
 // turbo
-4. テストを実行する `npm test`
+6. テストを実行する `npm test`
 // turbo
-5. テスト用Vaultにデプロイする `.\sync-plugin.bat`
-6. 手動検証を行う（必要な場合）
+7. テスト用Vaultにデプロイする `.\sync-plugin.bat`
+8. 手動検証を行う（必要な場合）
 // turbo
-7. 変更をコミットしてプッシュする
+9. 変更をコミットしてプッシュする
     - `git add .`
     - `git commit -m "feat: [feature description]"`
     - `git push -u origin feature/[feature-name]`
 // turbo
-8. PRを作成する
+10. PRを作成する
     - `gh pr create ...`
-9. ユーザーにPRの確認を依頼する（マージはユーザーが行う）
+11. ユーザーにPRの確認を依頼する（マージはユーザーが行う）
