@@ -2,6 +2,8 @@
 description: Obsidian Level Up の新機能を開発する手順
 ---
 
+// turbo-all
+
 1. **詳細仕様の策定（Discussion）**
    - 対象のIssueについて、詳細な実装仕様や設計方針をユーザーと議論する。
    - 決定事項をまとめる。
@@ -11,7 +13,13 @@ description: Obsidian Level Up の新機能を開発する手順
 // turbo
    - `gh issue comment [Issue番号] --body "### Detailed Specification\n\n[Summary of discussion]"`
 
-3. 機能ごとのブランチを作成する `git checkout -b feature/[feature-name]`
+3. **開発環境の最新化（重要）**
+   - コンフリクトを防ぐため、開発開始前に必ず `main` ブランチを最新にする。
+// turbo-all
+   - `git checkout main`
+   - `git pull origin main`
+
+4. 機能ごとのブランチを作成する `git checkout -b feature/[feature-name]`
 4. 変更を実装する
 // turbo
 5. プラグインをビルドする `npm run build`
