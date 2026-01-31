@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, IconName, setIcon } from 'obsidian';
 import { Chart, registerables } from 'chart.js';
 import { LevelData } from './types';
+import { BADGES } from './achievements';
 
 Chart.register(...registerables);
 
@@ -34,9 +35,6 @@ export class DashboardView extends ItemView {
         // Auto-refresh when container resizes
         this.resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
-                // Avoid infinite loop if render changes size
-                // Simple debounce or check if width changed significantly could be added
-                // For now, straight re-render to support "dynamic expansion"
                 this.render();
             }
         });
@@ -57,7 +55,6 @@ export class DashboardView extends ItemView {
         container.empty();
         container.addClass('level-up-dashboard');
 
-        // Layout: Use CSS Grid or Flexbox logic here via standard DOM
         // 1. Profile Section
         const profileSection = container.createEl('div', { cls: 'dashboard-profile' });
         this.renderProfile(profileSection);
@@ -71,16 +68,14 @@ export class DashboardView extends ItemView {
         container.createEl('h3', { text: 'XP Trend (Last 30 Days)' });
         const chartContainer = container.createEl('div', { cls: 'dashboard-chart' });
         this.renderChart(chartContainer);
+
+        // 4. Achievements Section
+        container.createEl('h3', { text: 'Achievements' });
+        const achievementsSection = container.createEl('div', { cls: 'dashboard-achievements' });
+        this.renderAchievements(achievementsSection);
     }
 
     renderProfile(el: HTMLElement) {
-        // Wrapper for Info (Level, Stats, Bar) and Avatar
-        // Layout: [ Info (flex-grow) ] [ Avatar (fixed) ]
-        // Info Layout:
-        //  [ Level ]
-        //  [ Stats Row (XP, Streak) ]
-        //  [ Progress Bar ]
-
         const infoContainer = el.createEl('div', { cls: 'profile-info' });
 
         const header = infoContainer.createEl('div', { cls: 'profile-header' });
@@ -88,7 +83,7 @@ export class DashboardView extends ItemView {
 
         const statsRow = infoContainer.createEl('div', { cls: 'profile-stats-row' });
         statsRow.createEl('span', { text: `Total XP: ${this.data.totalXp}` });
-        statsRow.createEl('span', { cls: 'separator', text: ' | ' }); // Visual separator that can be hidden via CSS if wrapped needed? Actually flex gap is better.
+        statsRow.createEl('span', { cls: 'separator', text: ' | ' });
         statsRow.createEl('span', { text: `Streak: ${this.data.streak} days` });
 
         // Progress Bar
@@ -103,73 +98,27 @@ export class DashboardView extends ItemView {
     }
 
     renderHeatmap(el: HTMLElement) {
-        const containerWidth = el.innerWidth || el.clientWidth || 300; // Fallback width
+        // Use contentEl width to ensure we get the container's available width
+        // Subtract padding (approx 40px from styles)
+        const availableWidth = this.contentEl.clientWidth - 40;
+        const containerWidth = availableWidth > 0 ? availableWidth : 300;
         const itemSize = 14; // 12px width + 2px gap
-        // Calculate how many items fit in the container width
-        // We only want one row for simplicity as per "heatmap line" style request or multi-row?
-        // Wait, typical heatmap is 7 days vertical.
-        // Assuming user wants single horizontal line or standard grid?
-        // User said "heatmap", usually means 7 rows x N cols.
-        // Let's implement standard 7-row heatmap that fits width.
-
         const cols = Math.floor(containerWidth / itemSize);
         const daysToRender = cols * 7;
 
-        // Re-create grid logic
         const grid = el.createEl('div', { cls: 'heatmap-grid' });
-        // Override CSS to ensure grid layout
         grid.style.display = 'grid';
         grid.style.gridTemplateColumns = `repeat(${cols}, 12px)`;
         grid.style.gridTemplateRows = 'repeat(7, 12px)';
         grid.style.gap = '2px';
-        grid.style.justifyContent = 'end'; // Align to right
+        grid.style.justifyContent = 'end';
+        grid.style.gridAutoFlow = 'column';
 
         const today = new Date();
-        // Adjust start date to align columns correctly (so today is at the bottom right)
-        // Today is:
-        const currentDayOfWeek = today.getDay(); // 0 (Sun) - 6 (Sat)
-
-        // We render 'cols' columns. The last column contains 'today'.
-        // To fill the grid from top-left to bottom-right (standard GitHub style),
-        // we usually go column by column.
-
-        // Actually, simpler approach for "fitting width":
-        // Just render N boxes from Left to Right?
-        // No, GitHub style is Vertical (Day of week) x Horizontal (Week).
-
-        // Let's render (cols * 7) days, but we need to offset so "today" is the last cell?
-        // Actually, usually "Today" is in the last column, at the correct DayOfWeek position.
-
-        // Total cells to attempt to fill = cols * 7
-        // But we want the last cell to be roughly "Today".
-
-        // Logic:
-        // 1. Determine End Date = Today
-        // 2. Determine Start Date = Today - (cols * 7) + (adjustment for week alignment?)
-
-        // Let's simplify: Just render rects for the last N days where N fits.
-        // If users wants "Heatmap", they usually expect the grid.
-
-        // Column-major order (standard contribution graph) is hard with simple div loop unless we use grid-auto-flow: column;
-        grid.style.gridAutoFlow = 'column';
 
         for (let i = daysToRender - 1; i >= 0; i--) {
             const d = new Date();
             d.setDate(today.getDate() - i);
-
-            // If we want alignment such that the last column ends on "Today" (which might be Wednesday),
-            // and we rely on grid-auto-flow: column, we might need padding cells at the start?
-            // Unnecessary complexity for Phase 1. 
-            // Let's just render the last 'daysToRender' days.
-            // It will fill columns 1..N. The last cell will be at bottom-right only if count is perfect multiple of 7.
-
-            // To make sure Today is at the correct position relative to the week:
-            // GitHub graph: Rows are Mon, Tue, Wed...
-            // "Today" is Wed. So it should be in the 3rd row of the last column.
-
-            // Let's try to just render a simple stream of boxes for now, as aligning contribution graph perfectly requires more math.
-            // Or better: Use CSS Grid with 7 rows, and let CSS handle the flow.
-
             const dateStr = d.toISOString().split('T')[0];
             const xp = this.data.xpHistory?.[dateStr] || 0;
 
@@ -221,9 +170,24 @@ export class DashboardView extends ItemView {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: false // Disable animation for smoother updates
+                animation: false
             }
         });
+    }
+
+    renderAchievements(el: HTMLElement) {
+        const grid = el.createEl('div', { cls: 'achievements-grid' });
+
+        for (const badge of BADGES) {
+            const isEarned = this.data.earnedBadges?.includes(badge.id);
+            const card = grid.createEl('div', {
+                cls: `achievement-card ${isEarned ? 'earned' : 'locked'} ${badge.tier}`,
+                attr: { 'title': `${badge.name}\n${badge.description}\n(Bonus: ${badge.bonusXp} XP)` }
+            });
+
+            const iconContainer = card.createEl('div', { cls: 'achievement-icon' });
+            setIcon(iconContainer, badge.icon);
+        }
     }
 
     async onClose() {

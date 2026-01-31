@@ -1,6 +1,7 @@
 import { Plugin, TFile, Editor, MarkdownView, Notice, PluginSettingTab, App, Setting, WorkspaceLeaf } from 'obsidian';
 import { LevelData, DEFAULT_DATA, GamificationSettings, DEFAULT_SETTINGS } from './types';
 import { addXp, updateStreak } from './gamification';
+import { checkAchievements } from './achievements';
 import { DashboardView, VIEW_TYPE_DASHBOARD } from './DashboardView';
 
 export default class LevelUpPlugin extends Plugin {
@@ -65,12 +66,24 @@ export default class LevelUpPlugin extends Plugin {
         }, 60 * 1000);
         this.registerInterval(this.readingTimer);
 
-        // 5. 基本イベント (作成、編集)
+        // 5. 基本イベント (作成、編集、削除)
         this.registerEvent(
             this.app.vault.on('create', (file) => {
                 if (file instanceof TFile) {
                     if (this.isExcluded(file.path)) return; // 除外判定
+                    this.data.stats.notesCreated++;
                     this.gainXp(this.settings.xpPerNote, `Note Created: ${file.name}`);
+                }
+            })
+        );
+
+        this.registerEvent(
+            this.app.vault.on('delete', (file) => {
+                if (file instanceof TFile) {
+                    if (this.isExcluded(file.path)) return;
+                    this.data.stats.notesDeleted++;
+                    this.savePluginData();
+                    this.checkForAchievements();
                 }
             })
         );
@@ -78,6 +91,7 @@ export default class LevelUpPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('editor-change', (editor: Editor, view: MarkdownView) => {
                 if (view.file && this.isExcluded(view.file.path)) return; // 除外判定
+                this.data.stats.charsWritten++;
                 this.gainXp(this.settings.xpPerChar, 'Typing...');
             })
         );
@@ -115,6 +129,9 @@ export default class LevelUpPlugin extends Plugin {
     async loadPluginData() {
         const loaded = await this.loadData();
         this.data = Object.assign({}, DEFAULT_DATA, loaded?.data);
+        // Ensure new fields exist (Migration)
+        if (!this.data.earnedBadges) this.data.earnedBadges = [];
+        if (!this.data.stats) this.data.stats = { notesCreated: 0, notesDeleted: 0, linksCreated: 0, charsWritten: 0 };
         this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded?.settings);
     }
 
@@ -152,6 +169,7 @@ export default class LevelUpPlugin extends Plugin {
         if (newCount > oldCount) {
             const diff = newCount - oldCount;
             const xp = diff * this.settings.xpPerLink;
+            this.data.stats.linksCreated += diff;
             this.gainXp(xp, `Link Added: +${diff}`);
         }
         this.linkCounts.set(file.path, newCount);
@@ -190,6 +208,24 @@ export default class LevelUpPlugin extends Plugin {
                 leaf.view.refresh(this.data);
             }
         });
+
+        // Achievements check
+        this.checkForAchievements();
+    }
+
+    checkForAchievements() {
+        const newBadges = checkAchievements(this.data);
+        if (newBadges.length > 0) {
+            for (const badge of newBadges) {
+                this.data.earnedBadges.push(badge.id);
+                new Notice(`🏆 Badge Unlocked: ${badge.name}!\n${badge.description}`);
+
+                if (badge.bonusXp > 0) {
+                    this.gainXp(badge.bonusXp, `Badge: ${badge.name}`);
+                }
+            }
+            this.savePluginData();
+        }
     }
 
     checkStreak() {
@@ -207,7 +243,6 @@ export default class LevelUpPlugin extends Plugin {
         }
     }
 
-    // Phase 1: 除外判定ロジック
     isExcluded(filePath: string): boolean {
         if (!this.settings.excludedFolders) return false;
 
