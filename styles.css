@@ -1,0 +1,330 @@
+/* Dashboard Layout */
+.level-up-dashboard {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.dashboard-profile {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--background-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    gap: 15px;
+    overflow: hidden;
+}
+
+.profile-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-size: 1.8em;
+    color: var(--text-accent);
+    white-space: nowrap;
+}
+
+.profile-stats-row {
+    display: flex;
+    gap: 10px;
+    font-size: 1.1em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.progress-container {
+    width: 100%;
+    background-color: var(--background-modifier-border);
+    border-radius: 10px;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-primary);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--interactive-accent);
+    transition: width 0.3s ease;
+}
+
+.progress-container small {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-on-accent);
+    font-size: 0.8em;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+}
+
+/* Heatmap */
+.dashboard-heatmap {
+    margin-bottom: 20px;
+    overflow-x: hidden;
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 12px);
+    gap: 2px;
+    justify-content: end;
+}
+
+.heatmap-cell {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: var(--background-modifier-border);
+}
+
+.heatmap-cell.level-0 {
+    background-color: var(--background-modifier-border);
+}
+
+.heatmap-cell.level-1 {
+    background-color: rgba(75, 192, 192, 0.2);
+}
+
+.heatmap-cell.level-2 {
+    background-color: rgba(75, 192, 192, 0.4);
+}
+
+.heatmap-cell.level-3 {
+    background-color: rgba(75, 192, 192, 0.7);
+}
+
+.heatmap-cell.level-4 {
+    background-color: rgba(75, 192, 192, 1);
+}
+
+/* Chart */
+.dashboard-chart {
+    height: 250px;
+    background-color: var(--background-secondary);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Achievements */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 60px);
+    gap: 12px;
+    padding: 15px;
+    background-color: var(--background-secondary);
+    border-radius: 8px;
+    justify-content: center;
+}
+
+.achievement-card {
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-primary);
+    border-radius: 8px;
+    cursor: help;
+    transition: transform 0.2s;
+    border: 2px solid var(--background-modifier-border);
+    position: relative;
+}
+
+.achievement-card:hover {
+    transform: scale(1.05);
+}
+
+.achievement-card.locked {
+    filter: grayscale(100%) opacity(0.4);
+}
+
+.achievement-icon {
+    color: var(--text-muted);
+}
+
+/* Tier Styles - Only apply when EARNED */
+
+/* Bronze: Standard bronze */
+.achievement-card.earned.bronze {
+    border-color: #cd7f32 !important;
+}
+
+.achievement-card.earned.bronze .achievement-icon {
+    color: #cd7f32;
+}
+
+/* Silver: Bright, shiny silver */
+.achievement-card.earned.silver {
+    border-color: #e8e8e8 !important;
+    box-shadow: 0 0 5px rgba(232, 232, 232, 0.3);
+}
+
+.achievement-card.earned.silver .achievement-icon {
+    color: #e8e8e8;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
+/* Gold: Golden glow */
+.achievement-card.earned.gold {
+    border-color: #ffd700 !important;
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.achievement-card.earned.gold .achievement-icon {
+    color: #ffd700;
+    text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
+}
+
+/* Platinum: White-ish metal */
+.achievement-card.earned.platinum {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.achievement-card.earned.platinum .achievement-icon {
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+}
+
+/* Diamond: Blue-tinted brilliance */
+.achievement-card.earned.diamond {
+    border-color: #b9f2ff !important;
+    box-shadow: 0 0 12px rgba(185, 242, 255, 0.7);
+}
+
+.achievement-card.earned.diamond .achievement-icon {
+    color: #b9f2ff;
+    text-shadow: 0 0 8px rgba(185, 242, 255, 0.8);
+}
+
+/* Master: Deep Ruby Red */
+.achievement-card.earned.master {
+    border-color: #e0115f !important;
+    box-shadow: 0 0 15px rgba(224, 17, 95, 0.6);
+}
+
+.achievement-card.earned.master .achievement-icon {
+    color: #e0115f;
+    border-color: #e0115f !important;
+    text-shadow: 0 0 10px rgba(224, 17, 95, 0.8);
+}
+
+/* Legend: Rainbow Animation */
+@keyframes rainbow-border {
+    0% {
+        border-color: #ff0000;
+        box-shadow: 0 0 10px #ff0000;
+    }
+
+    16% {
+        border-color: #ff8800;
+        box-shadow: 0 0 10px #ff8800;
+    }
+
+    33% {
+        border-color: #ffff00;
+        box-shadow: 0 0 10px #ffff00;
+    }
+
+    50% {
+        border-color: #00ff00;
+        box-shadow: 0 0 10px #00ff00;
+    }
+
+    66% {
+        border-color: #00ffff;
+        box-shadow: 0 0 10px #00ffff;
+    }
+
+    83% {
+        border-color: #0000ff;
+        box-shadow: 0 0 10px #0000ff;
+    }
+
+    100% {
+        border-color: #ff00ff;
+        box-shadow: 0 0 10px #ff00ff;
+    }
+}
+
+@keyframes rainbow-text {
+    0% {
+        color: #ff0000;
+        text-shadow: 0 0 5px #ff0000;
+    }
+
+    16% {
+        color: #ff8800;
+        text-shadow: 0 0 5px #ff8800;
+    }
+
+    33% {
+        color: #ffff00;
+        text-shadow: 0 0 5px #ffff00;
+    }
+
+    50% {
+        color: #00ff00;
+        text-shadow: 0 0 5px #00ff00;
+    }
+
+    66% {
+        color: #00ffff;
+        text-shadow: 0 0 5px #00ffff;
+    }
+
+    83% {
+        color: #0000ff;
+        text-shadow: 0 0 5px #0000ff;
+    }
+
+    100% {
+        color: #ff00ff;
+        text-shadow: 0 0 5px #ff00ff;
+    }
+}
+
+.achievement-card.earned.legend {
+    animation: rainbow-border 4s linear infinite;
+    border-width: 3px !important;
+}
+
+.achievement-card.earned.legend .achievement-icon {
+    animation: rainbow-text 4s linear infinite;
+}
+
+/* Special Event Tier (Blue) */
+.achievement-card.earned.special {
+    border-color: #4facfe !important;
+    box-shadow: 0 0 8px rgba(79, 172, 254, 0.4);
+}
+
+.achievement-card.earned.special .achievement-icon {
+    color: #4facfe;
+    text-shadow: 0 0 5px rgba(79, 172, 254, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 350px) {
+    .profile-avatar-container {
+        display: none;
+    }
+}
