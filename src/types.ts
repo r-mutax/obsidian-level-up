@@ -7,6 +7,14 @@ export interface LevelData {
     lastDateJoined: string; // ISO Date
     // Phase 1 Extensions
     xpHistory: Record<string, number>; // YYYY-MM-DD: xp
+    // Phase 2 Extensions
+    earnedBadges: string[];
+    stats: {
+        notesCreated: number;
+        notesDeleted: number;
+        linksCreated: number;
+        charsWritten: number;
+    }
 }
 
 export const DEFAULT_DATA: LevelData = {
@@ -17,6 +25,23 @@ export const DEFAULT_DATA: LevelData = {
     streak: 0,
     lastDateJoined: new Date().toISOString().split('T')[0],
     xpHistory: {},
+    earnedBadges: [],
+    stats: {
+        notesCreated: 0,
+        notesDeleted: 0,
+        linksCreated: 0,
+        charsWritten: 0
+    }
+}
+
+export interface Badge {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond' | 'master' | 'legend' | 'special';
+    bonusXp: number;
+    condition: (data: LevelData) => boolean;
 }
 
 export interface GamificationSettings {
