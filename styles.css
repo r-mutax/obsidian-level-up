@@ -31,6 +31,37 @@
     font-size: 1.8em;
     color: var(--text-accent);
     white-space: nowrap;
+    line-height: 1.2;
+}
+
+.profile-title-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.profile-avatar {
+    font-size: 3em;
+    line-height: 1;
+    animation: bounce 2s infinite;
+}
+
+.profile-rank {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--text-normal);
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
 }
 
 .profile-stats-row {
@@ -327,4 +358,14 @@
     .profile-avatar-container {
         display: none;
     }
+}
+
+/* Level Up Notification */
+.level-up-notice {
+    text-align: center;
+}
+
+.level-up-notice h2 {
+    margin: 5px 0;
+    color: var(--interactive-accent);
 }

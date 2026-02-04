@@ -2,6 +2,7 @@ import { ItemView, WorkspaceLeaf, IconName, setIcon } from 'obsidian';
 import { Chart, registerables } from 'chart.js';
 import { LevelData } from './types';
 import { BADGES } from './achievements';
+import { getTitle, getNextTitle } from './titles';
 
 Chart.register(...registerables);
 
@@ -78,8 +79,16 @@ export class DashboardView extends ItemView {
     renderProfile(el: HTMLElement) {
         const infoContainer = el.createEl('div', { cls: 'profile-info' });
 
+        // Avatar & Title Section
+        const currentTitle = getTitle(this.data.level);
+        const nextTitle = getNextTitle(this.data.level);
+
         const header = infoContainer.createEl('div', { cls: 'profile-header' });
-        header.createEl('h2', { text: `Level ${this.data.level}` });
+        const titleRow = header.createEl('div', { cls: 'profile-title-row' });
+        titleRow.createEl('div', { cls: 'profile-avatar', text: currentTitle.avatar });
+        const titleText = titleRow.createEl('div', { cls: 'profile-title-text' });
+        titleText.createEl('h2', { text: `Level ${this.data.level}` });
+        titleText.createEl('div', { cls: 'profile-rank', text: currentTitle.name });
 
         const statsRow = infoContainer.createEl('div', { cls: 'profile-stats-row' });
         statsRow.createEl('span', { text: `Total XP: ${this.data.totalXp}` });
@@ -94,7 +103,12 @@ export class DashboardView extends ItemView {
                 cls: 'progress-bar-fill',
                 attr: { style: `width: ${percent}%` }
             });
-        progressContainer.createEl('small', { text: `${this.data.currentXp} / ${this.data.nextLevelXp} XP` });
+
+        let progressText = `${this.data.currentXp} / ${this.data.nextLevelXp} XP`;
+        if (nextTitle) {
+            progressText += ` (Next Rank: ${nextTitle.name} at Lv.${nextTitle.minLevel})`;
+        }
+        progressContainer.createEl('small', { text: progressText });
     }
 
     renderHeatmap(el: HTMLElement) {

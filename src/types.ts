@@ -54,6 +54,8 @@ export interface GamificationSettings {
     xpPerMinuteReading: number;
     // Phase 1 Extensions
     excludedFolders: string; // 改行区切りの文字列として保存
+    // Phase 3 Extensions
+    enableEffects: boolean;
     debug: boolean;
 }
 
@@ -65,5 +67,6 @@ export const DEFAULT_SETTINGS: GamificationSettings = {
     linkFactor: 0.5,
     xpPerMinuteReading: 10,
     excludedFolders: '',
+    enableEffects: true,
     debug: true,
 }

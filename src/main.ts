@@ -2,6 +2,7 @@ import { Plugin, TFile, Editor, MarkdownView, Notice, PluginSettingTab, App, Set
 import { LevelData, DEFAULT_DATA, GamificationSettings, DEFAULT_SETTINGS } from './types';
 import { addXp, updateStreak } from './gamification';
 import { checkAchievements } from './achievements';
+import { triggerConfetti, showLevelUpNotification } from './effects';
 import { DashboardView, VIEW_TYPE_DASHBOARD } from './DashboardView';
 
 export default class LevelUpPlugin extends Plugin {
@@ -197,7 +198,10 @@ export default class LevelUpPlugin extends Plugin {
         }
 
         if (result.leveledUp) {
-            new Notice(`Level Up! You are now Level ${this.data.level}!`);
+            if (this.settings.enableEffects) {
+                triggerConfetti();
+            }
+            showLevelUpNotification(this.data.level);
         }
 
         this.savePluginData();
@@ -293,6 +297,16 @@ class LevelUpSettingTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.excludedFolders)
                 .onChange(async (value) => {
                     this.plugin.settings.excludedFolders = value;
+                    await this.plugin.savePluginData();
+                }));
+
+        new Setting(containerEl)
+            .setName('Enable Level Up Effects')
+            .setDesc('Toggle visual effects (e.g. confetti) on level up.')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.enableEffects)
+                .onChange(async (value) => {
+                    this.plugin.settings.enableEffects = value;
                     await this.plugin.savePluginData();
                 }));
 
