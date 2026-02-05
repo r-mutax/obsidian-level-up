@@ -60,7 +60,12 @@ export class DashboardView extends ItemView {
         const profileSection = container.createEl('div', { cls: 'dashboard-profile' });
         this.renderProfile(profileSection);
 
-        // 2. Heatmap Section
+        // 2. Active Quests Section
+        container.createEl('h3', { text: '📜 Active Quests' });
+        const questsSection = container.createEl('div', { cls: 'dashboard-quests' });
+        this.renderQuests(questsSection);
+
+        // 3. Heatmap Section
         container.createEl('h3', { text: 'Activity Heatmap' });
         const heatmapSection = container.createEl('div', { cls: 'dashboard-heatmap' });
         this.renderHeatmap(heatmapSection);
@@ -74,6 +79,40 @@ export class DashboardView extends ItemView {
         container.createEl('h3', { text: 'Achievements' });
         const achievementsSection = container.createEl('div', { cls: 'dashboard-achievements' });
         this.renderAchievements(achievementsSection);
+    }
+
+    renderQuests(el: HTMLElement) {
+        if (!this.data.quests || this.data.quests.length === 0) {
+            el.createEl('p', { text: 'No active quests. Check back tomorrow!', cls: 'no-quests' });
+            return;
+        }
+
+        const list = el.createEl('div', { cls: 'quest-list' });
+
+        for (const quest of this.data.quests) {
+            // Only show daily quests for now, or all active ones
+            const item = list.createEl('div', { cls: `quest-item ${quest.completed ? 'completed' : ''}` });
+
+            const header = item.createEl('div', { cls: 'quest-header' });
+            header.createEl('span', { cls: 'quest-desc', text: quest.description });
+            if (quest.completed) {
+                header.createEl('span', { cls: 'quest-badge', text: 'CLAIMED' });
+            } else {
+                header.createEl('span', { cls: 'quest-reward', text: `${quest.rewardXp} XP` });
+            }
+
+            // Progress
+            if (!quest.completed) {
+                const progressContainer = item.createEl('div', { cls: 'quest-progress' });
+                const percent = Math.min(100, Math.floor((quest.progress / quest.target) * 100));
+                progressContainer.createEl('div', { cls: 'quest-progress-bg' })
+                    .createEl('div', {
+                        cls: 'quest-progress-fill',
+                        attr: { style: `width: ${percent}%` }
+                    });
+                progressContainer.createEl('small', { text: `${quest.progress} / ${quest.target}` });
+            }
+        }
     }
 
     renderProfile(el: HTMLElement) {

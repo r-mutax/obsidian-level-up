@@ -64,6 +64,79 @@
     }
 }
 
+/* Quests */
+.quest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quest-item {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.quest-item.completed {
+    border-color: var(--interactive-accent);
+    background-color: rgba(var(--interactive-accent-rgb), 0.1);
+}
+
+.quest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.quest-desc {
+    font-weight: bold;
+}
+
+.quest-reward {
+    color: var(--text-accent);
+    font-size: 0.9em;
+}
+
+.quest-badge {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.quest-progress {
+    width: 100%;
+    height: 6px;
+    background-color: var(--background-modifier-border);
+    border-radius: 3px;
+    margin-top: 5px;
+    position: relative;
+}
+
+.quest-progress-bg {
+    width: 100%;
+    height: 100%;
+}
+
+.quest-progress-fill {
+    height: 100%;
+    background-color: var(--text-accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.quest-progress small {
+    display: none;
+    /* Hide numbers for cleaner look, tooltip maybe? */
+}
+
 .profile-stats-row {
     display: flex;
     gap: 10px;
