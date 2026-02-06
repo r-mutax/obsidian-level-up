@@ -3,6 +3,7 @@ import { LevelData, DEFAULT_DATA, GamificationSettings, DEFAULT_SETTINGS } from 
 import { addXp, updateStreak } from './gamification';
 import { checkAchievements } from './achievements';
 import { triggerConfetti, showLevelUpNotification } from './effects';
+import { generateDailyQuests, updateQuestProgress } from './quests';
 import { DashboardView, VIEW_TYPE_DASHBOARD } from './DashboardView';
 
 export default class LevelUpPlugin extends Plugin {
@@ -47,9 +48,36 @@ export default class LevelUpPlugin extends Plugin {
         // 2. ストリークチェック
         this.checkStreak();
 
-        // 3. Phase 0: リンク監視
+        // 3. Daily Quests
+        this.data = generateDailyQuests(this.data);
+        this.savePluginData();
+
+        // 4. Phase 0: リンク監視 & 5. 基本イベント
         this.app.workspace.onLayoutReady(() => {
             this.initializeLinkCounts();
+
+            // 5. 基本イベント (作成、編集、削除) - Wait for layout ready to avoid initial load events
+            this.registerEvent(
+                this.app.vault.on('create', (file) => {
+                    if (file instanceof TFile) {
+                        if (this.isExcluded(file.path)) return; // 除外判定
+                        this.data.stats.notesCreated++;
+                        this.gainXp(this.settings.xpPerNote, `Note Created: ${file.name}`);
+                        this.updateQuests('notes', 1);
+                    }
+                })
+            );
+
+            this.registerEvent(
+                this.app.vault.on('delete', (file) => {
+                    if (file instanceof TFile) {
+                        if (this.isExcluded(file.path)) return;
+                        this.data.stats.notesDeleted++;
+                        this.savePluginData();
+                        this.checkForAchievements();
+                    }
+                })
+            );
         });
 
         this.registerEvent(
@@ -58,7 +86,7 @@ export default class LevelUpPlugin extends Plugin {
             })
         );
 
-        // 4. Phase 0: 閲覧時間
+        // 6. Phase 0: 閲覧時間
         this.registerDomEvent(document, 'mousemove', () => { this.lastUserActionTime = Date.now(); });
         this.registerDomEvent(document, 'keydown', () => { this.lastUserActionTime = Date.now(); });
 
@@ -67,33 +95,12 @@ export default class LevelUpPlugin extends Plugin {
         }, 60 * 1000);
         this.registerInterval(this.readingTimer);
 
-        // 5. 基本イベント (作成、編集、削除)
-        this.registerEvent(
-            this.app.vault.on('create', (file) => {
-                if (file instanceof TFile) {
-                    if (this.isExcluded(file.path)) return; // 除外判定
-                    this.data.stats.notesCreated++;
-                    this.gainXp(this.settings.xpPerNote, `Note Created: ${file.name}`);
-                }
-            })
-        );
-
-        this.registerEvent(
-            this.app.vault.on('delete', (file) => {
-                if (file instanceof TFile) {
-                    if (this.isExcluded(file.path)) return;
-                    this.data.stats.notesDeleted++;
-                    this.savePluginData();
-                    this.checkForAchievements();
-                }
-            })
-        );
-
         this.registerEvent(
             this.app.workspace.on('editor-change', (editor: Editor, view: MarkdownView) => {
                 if (view.file && this.isExcluded(view.file.path)) return; // 除外判定
                 this.data.stats.charsWritten++;
                 this.gainXp(this.settings.xpPerChar, 'Typing...');
+                this.updateQuests('chars', 1);
             })
         );
     }
@@ -133,6 +140,7 @@ export default class LevelUpPlugin extends Plugin {
         // Ensure new fields exist (Migration)
         if (!this.data.earnedBadges) this.data.earnedBadges = [];
         if (!this.data.stats) this.data.stats = { notesCreated: 0, notesDeleted: 0, linksCreated: 0, charsWritten: 0 };
+        if (!this.data.quests) this.data.quests = [];
         this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded?.settings);
     }
 
@@ -142,6 +150,13 @@ export default class LevelUpPlugin extends Plugin {
             settings: this.settings
         });
         this.updateStatusBar();
+
+        // Refresh Dashboard Views if open
+        this.app.workspace.getLeavesOfType(VIEW_TYPE_DASHBOARD).forEach(leaf => {
+            if (leaf.view instanceof DashboardView) {
+                leaf.view.refresh(this.data);
+            }
+        });
     }
 
     updateStatusBar() {
@@ -154,8 +169,9 @@ export default class LevelUpPlugin extends Plugin {
         this.app.vault.getMarkdownFiles().forEach(file => {
             if (this.isExcluded(file.path)) return; // 除外判定
             const cache = this.app.metadataCache.getFileCache(file);
-            const count = cache?.links?.length || 0;
-            this.linkCounts.set(file.path, count);
+            const links = cache?.links?.length || 0;
+            const embeds = cache?.embeds?.length || 0;
+            this.linkCounts.set(file.path, links + embeds);
         });
     }
 
@@ -164,7 +180,10 @@ export default class LevelUpPlugin extends Plugin {
         if (this.isExcluded(file.path)) return; // 除外判定
 
         const cache = this.app.metadataCache.getFileCache(file);
-        const newCount = cache?.links?.length || 0;
+        const newLinks = cache?.links?.length || 0;
+        const newEmbeds = cache?.embeds?.length || 0;
+        const newCount = newLinks + newEmbeds;
+
         const oldCount = this.linkCounts.get(file.path) || 0;
 
         if (newCount > oldCount) {
@@ -172,6 +191,7 @@ export default class LevelUpPlugin extends Plugin {
             const xp = diff * this.settings.xpPerLink;
             this.data.stats.linksCreated += diff;
             this.gainXp(xp, `Link Added: +${diff}`);
+            this.updateQuests('links', diff);
         }
         this.linkCounts.set(file.path, newCount);
     }
@@ -204,17 +224,43 @@ export default class LevelUpPlugin extends Plugin {
             showLevelUpNotification(this.data.level);
         }
 
-        this.savePluginData();
+        // XP quests check (prevent infinite loop by not calling updateQuests for xp type inside gainXp if possible, 
+        // or ensure updateQuests('xp') doesn't call gainXp recursively for the REWARD)
+        // Actually updateQuests calls gainXp for reward. To avoid loop, we should check if reason is NOT a quest reward.
+        if (!reason.startsWith('Quest Completed')) {
+            this.updateQuests('xp', amount);
+        }
 
-        // Refresh Dashboard Views if open
-        this.app.workspace.getLeavesOfType(VIEW_TYPE_DASHBOARD).forEach(leaf => {
-            if (leaf.view instanceof DashboardView) {
-                leaf.view.refresh(this.data);
-            }
-        });
+        this.savePluginData();
 
         // Achievements check
         this.checkForAchievements();
+    }
+
+    updateQuests(type: 'chars' | 'notes' | 'links' | 'xp', amount: number) {
+        const result = updateQuestProgress(this.data, type, amount);
+
+        if (result.completedQuests.length > 0) {
+            this.data = result.data;
+            for (const quest of result.completedQuests) {
+                new Notice(`✅ Quest Completed: ${quest.description}!\n+${quest.rewardXp} XP`);
+                this.gainXp(quest.rewardXp, `Quest Completed: ${quest.description}`);
+            }
+            // save handled in gainXp or explicitly
+            this.savePluginData();
+        } else if (JSON.stringify(this.data.quests) !== JSON.stringify(result.data.quests)) {
+            // Only data update, no completion
+            this.data = result.data;
+            // No need to save on every char update? Maybe too heavy. 
+            // But dashboard needs refresh. 
+            // For chars, we save on editor-change anyway via 'gainXp' but wait...
+            // In editor-change we call gainXp(1) -> calls savePluginData()
+            // So we don't need to save again here unless it's strictly quest progress.
+            // But updateQuests is called AFTER gainXp in some cases, or BEFORE.
+
+            // Optimization: For chars, gainXp saves. For others, gainXp saves.
+            // We just need to ensure data is updated in memory.
+        }
     }
 
     checkForAchievements() {

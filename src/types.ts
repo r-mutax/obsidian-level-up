@@ -14,7 +14,10 @@ export interface LevelData {
         notesDeleted: number;
         linksCreated: number;
         charsWritten: number;
-    }
+    };
+    // Phase 2: Quest System
+    quests: Quest[];
+    lastQuestGenDate: string; // ISO Date YYYY-MM-DD
 }
 
 export const DEFAULT_DATA: LevelData = {
@@ -31,7 +34,23 @@ export const DEFAULT_DATA: LevelData = {
         notesDeleted: 0,
         linksCreated: 0,
         charsWritten: 0
-    }
+    },
+    quests: [],
+    lastQuestGenDate: ''
+}
+
+export interface Quest {
+    id: string;
+    type: 'daily' | 'weekly';
+    description: string;
+    target: number;      // e.g. 500 chars
+    progress: number;    // current value
+    completed: boolean;
+    rewardXp: number;
+    expiresAt: string;   // ISO Date
+    meta: {
+        type: 'chars' | 'notes' | 'links' | 'xp';
+    };
 }
 
 export interface Badge {
